@@ -152,13 +152,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="api.cpp" />
+    <ClCompile Include="buffer_manager.cpp" />
     <ClCompile Include="minisql.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api.h" />
+    <ClInclude Include="buffer_manager.h" />
     <ClInclude Include="catalog.h" />
     <ClInclude Include="index.h" />
     <ClInclude Include="interpreter.h" />
+    <ClInclude Include="minisql.h" />
     <ClInclude Include="record.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

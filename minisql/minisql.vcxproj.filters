@@ -21,6 +21,9 @@
     <ClCompile Include="api.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="buffer_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api.h">
@@ -36,6 +39,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="index.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="minisql.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="buffer_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
