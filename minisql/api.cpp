@@ -23,6 +23,9 @@ void tableCreateProcess(const string, vector<struct field>&, string &);
 void recordInsertProcess(const string, const string, const vector<struct field>, vector<Record_node> &);
 void conditionProcess(const string, const vector<struct field>, vector<Condition> &);
 void fieldsProcess(const string, const string, vector<string> &);
+struct recordRange recordProcess(const string, vector<Condition> &);
+vector<int> mergeOffsets(vector<int>, vector<int>);
+vector<int> excludeOffsets(vector<int>, vector<int>);
 
 // executeCommand 函数：API 模块的核心函数。
 // 本函数负责将 interpreter 处理得到的命令分给 Catalog Manager, Record Manager 和 Index Manager 进行处理。
@@ -179,27 +182,27 @@ void executeCommand(const struct command cmd)
 				{
 					initIndex(currentDatabase + "-" + cmd.arg1, 'd', sizeof(int));
 					const vector<Value_node> records = valuesInField(currentDatabase, cmd.arg2 + "-" + cmd.arg3);
-					for (int i = 0; i < records.size(); i++)
+					for (Value_node record: records)
 					{
-						insertIndexNode(currentDatabase + "-" + cmd.arg1, records[i].data.d, records[i].offset);
+						insertIndexNode(currentDatabase + "-" + cmd.arg1, record.data.d, record.offset);
 					}
 				}
 				else if (fieldInfo.fieldType == "float")
 				{
 					initIndex(currentDatabase + "-" + cmd.arg1, 'f', sizeof(float));
 					const vector<Value_node> records = valuesInField(currentDatabase, cmd.arg2 + "-" + cmd.arg3);
-					for (int i = 0; i < records.size(); i++)
+					for (Value_node record : records)
 					{
-						insertIndexNode(currentDatabase + "-" + cmd.arg1, records[i].data.f, records[i].offset);
+						insertIndexNode(currentDatabase + "-" + cmd.arg1, record.data.f, record.offset);
 					}
 				}
 				else if (fieldInfo.fieldType == "char")
 				{
 					initIndex(currentDatabase + "-" + cmd.arg1, 'c', fieldInfo.fieldSize);
 					const vector<Value_node> records = valuesInField(currentDatabase, cmd.arg2 + "-" + cmd.arg3);
-					for (int i = 0; i < records.size(); i++)
+					for (Value_node record : records)
 					{
-						insertIndexNode(currentDatabase + "-" + cmd.arg1, records[i].data.c, fieldInfo.fieldSize, records[i].offset);
+						insertIndexNode(currentDatabase + "-" + cmd.arg1, record.data.c, fieldInfo.fieldSize, record.offset);
 					}
 				}
 			}
@@ -276,9 +279,9 @@ void executeCommand(const struct command cmd)
 				clearIndex(currentDatabase + "#" + cmd.arg1);
 			}
 			vector<string> indice = indiceInTable(currentDatabase, cmd.arg1);
-			for (int i = 0; i < indice.size(); i++)
+			for (string index: indice)
 			{
-				clearIndex(currentDatabase + "-" + indice[i]);
+				clearIndex(currentDatabase + "-" + index);
 			}
 			// 清空数据表。
 			clearRecord(currentDatabase + "-" + cmd.arg1);
@@ -297,17 +300,28 @@ void executeCommand(const struct command cmd)
 			try		// 跳过肯定不能匹配的情形。
 			{
 				conditionProcess(cmd.arg2, fields, conditions);
-				const vector<struct Record> results = findRecords(currentDatabase + "-" + cmd.arg1, conditions);
+				struct recordRange recordRange = recordProcess(cmd.arg1, conditions);
+				vector<struct Record> results;
+				// range 里排除 excluded。
+				if (!recordRange.norange)
+				{
+					recordRange.range = excludeOffsets(recordRange.range, recordRange.excluded);
+					results = findRecords(currentDatabase + "-" + cmd.arg1, conditions, recordRange.range, recordRange.excluded);
+				}
+				else
+				{
+					results = findRecords(currentDatabase + "-" + cmd.arg1, conditions, recordRange.excluded);
+				}
 				// 选出存在 index 的字段并记录其字段名。
 				vector<string> indice;
-				for (int i = 0; i < fields.size(); i++)
+				for (const struct field field: fields)
 				{
-					string indexName = indexInField(currentDatabase, cmd.arg1, fields[i].fieldName);
+					string indexName = indexInField(currentDatabase, cmd.arg1, field.fieldName);
 					if (indexName != "")
 					{
 						indice.push_back(currentDatabase + "-" + indexName);
 					}
-					else if (isPrimaryKey(currentDatabase, cmd.arg1, fields[i].fieldName))
+					else if (isPrimaryKey(currentDatabase, cmd.arg1, field.fieldName))
 					{
 						indice.push_back(currentDatabase + "#" + cmd.arg1);
 					}
@@ -353,7 +367,7 @@ void executeCommand(const struct command cmd)
 			}
 			vector<string> fieldList;
 			fieldsProcess(cmd.arg2, cmd.arg1, fieldList);
-			printRecord(currentDatabase + "-" + cmd.arg2, fieldList);
+			printRecords(currentDatabase + "-" + cmd.arg2, fieldList);
 		}
 		else if (cmd.op == "34")
 		{
@@ -372,7 +386,16 @@ void executeCommand(const struct command cmd)
 			try		// 跳过肯定不能匹配的情形。
 			{
 				conditionProcess(cmd.arg3, fields, conditions);
-				printRecord(currentDatabase + "-" + cmd.arg2, fieldList, conditions);
+				struct recordRange recordRange = recordProcess(cmd.arg2, conditions);
+				if (!recordRange.norange)
+				{
+					recordRange.range = excludeOffsets(recordRange.range, recordRange.excluded);
+					printRecords(currentDatabase + "-" + cmd.arg2, conditions, fieldList, recordRange.range, recordRange.excluded);
+				}
+				else
+				{
+					printRecords(currentDatabase + "-" + cmd.arg2, conditions, fieldList, recordRange.excluded);
+				}
 			}
 			catch (DoNotMatch) {
 				printNoRecordFound();
@@ -381,6 +404,89 @@ void executeCommand(const struct command cmd)
 	}
 };
 
+// inCondInterval 函数：判断一个数值是否在条件的区间内。
+bool inCondInterval(float value, const Condition cond)
+{
+	if (cond.op == EQ)
+	{
+		if (value == cond.getValue1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (cond.op == DIFF)
+	{
+		if (value != cond.getValue1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (cond.op == LT)
+	{
+		if (value < cond.getValue1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (cond.op == GT)
+	{
+		if (value > cond.getValue1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (cond.op == LTE)
+	{
+		if (value <= cond.getValue1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (cond.op == GTE)
+	{
+		if (value >= cond.getValue1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (cond.op == BETW)
+	{
+		if ((value <= cond.getValue1 && cond.eq1 == false) || (value < cond.getValue1 && cond.eq1 == true)
+			|| (value >= cond.getValue2 && cond.eq2 == false) || (value > cond.getValue2 && cond.eq2 == true))
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 // 以下的内容是 API 模块处理一些有的没的玩意，仅供自用，如果你对这些不感兴趣可以不用看下去了。
 // 之后可能会把这些函数单独塞一个文件里边。
@@ -495,10 +601,9 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			int fieldSize = 0; // 分析得到的字段长度。
 			bool unique = false; // 分析得到的字段是否唯一。
 			bool flag = false; // 判断字段名是否有效。SQL 中要求字段命名必须为字母、数字或下划线，无首字符不得为数字的要求。
-			for (int i = 0; i < words[0].size(); i++)
+			for (char c: words[0])
 			{
-				if (!((words[0][i] >= '0' && words[0][i] <= '9') || (words[0][i] >= 'A'&&words[0][i] <= 'Z')\
-					|| (words[0][i] >= 'a'&&words[0][i] <= 'z') || words[0][i] == '_'))
+				if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_'))
 				{
 					flag = true;
 				}
@@ -779,48 +884,47 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		line = line.substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 		lines.push_back(line);
 	} while (rpos != string::npos);
-	for (int i = 0; i < lines.size(); i++)
+	for (string line: lines)
 	{
 		int oppos;	// 操作符的位置。
-		string op;	// 操作符的类型。
-		string line = lines[i];	// 当前的表达式。
+		condop op;	// 操作符的类型。
 		string attr;		// 要操作的属性。
 		string valueStr;	// 要操作的值的字符串形式。
 		try
 		{
 			if ((oppos = line.find('<=')) != string::npos)
 			{
-				op = "LTE";
+				op = LTE;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 2, line.length() - oppos - 2).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
 			else if ((oppos = line.find('>=')) != string::npos)
 			{
-				op = "GTE";
+				op = GTE;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 2, line.length() - oppos - 2).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
 			else if ((oppos = line.find('<>')) != string::npos)
 			{
-				op = "DIFF";
+				op = DIFF;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 2, line.length() - oppos - 2).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
 			else if ((oppos = line.find('<')) != string::npos)
 			{
-				op = "LT";
+				op = LT;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 1, line.length() - oppos - 1).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
 			else if ((oppos = line.find('>')) != string::npos)
 			{
-				op = "GT";
+				op = GT;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 1, line.length() - oppos - 1).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
 			else if ((oppos = line.find('=')) != string::npos)
 			{
-				op = "EQ";
+				op = EQ;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 1, line.length() - oppos - 1).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
@@ -853,7 +957,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 			{
 				if (valueStr[j] <'0' || valueStr[j] > '9') // 如果为非数字
 				{
-					throw SqlError("Value " + valueStr + " for field \"" + fields[i].fieldName + "\" does not match the type \"int\".");
+					throw SqlError("Value " + valueStr + " for field \"" + attr + "\" does not match the type \"int\".");
 				}
 			}
 			int value;
@@ -863,7 +967,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 			}
 			catch (out_of_range) // 如果出现越界的错误。
 			{
-				throw SqlError("Value " + valueStr + " for field \"" + fields[i].fieldName + "\" out of range.");
+				throw SqlError("Value " + valueStr + " for field \"" + attr + "\" out of range.");
 			}
 			Condition cond = Condition(attr, op, value);
 			conditions.push_back(cond);
@@ -875,7 +979,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 				int flag;	// 是否已经出现过一次小数点。
 				if (valueStr[j] <'0' || valueStr[j] > '9' || (valueStr[j] == '.' && (flag || j == 0 || j == valueStr.length - 1))) // 如果为非数字或小数点位置不对
 				{
-					throw SqlError("Value " + valueStr + " for field \"" + fields[i].fieldName + "\" does not match the type \"float\".");
+					throw SqlError("Value " + valueStr + " for field \"" + attr + "\" does not match the type \"float\".");
 				}
 				if (valueStr[j] == '.')
 				{
@@ -889,7 +993,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 			}
 			catch (out_of_range) // 如果出现越界的错误。
 			{
-				throw SqlError("Value " + valueStr + " for field \"" + fields[i].fieldName + "\" out of range.");
+				throw SqlError("Value " + valueStr + " for field \"" + attr + "\" out of range.");
 			}
 			Condition cond = Condition(attr, op, value);
 			conditions.push_back(cond);
@@ -898,19 +1002,262 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		{
 			if (valueStr[0] != '\'' || valueStr[valueStr.length - 1] != '\'')
 			{
-				throw SqlError("Value " + valueStr + " for field \"" + fields[i].fieldName + "\" does not match the type \"char\".");
+				throw SqlError("Value " + valueStr + " for field \"" + attr + "\" does not match the type \"char\".");
 			}
-			if (valueStr.size() > fields[i].fieldSize + 2)
+			if (valueStr.size() > fields[fieldId].fieldSize + 2)
 			{
 				throw DoNotMatch();
 			}
-			if (op != "EQ" && op != "DIFF")
+			if (op != EQ && op != DIFF)
 			{
-				throw SqlError("Invalid operation for field \"" + fields[i].fieldName + "\" of type \"char\".");
+				throw SqlError("Invalid operation for field \"" + attr + "\" of type \"char\".");
 			}
-			FixedString value = FixedString(fields[i].fieldSize, valueStr.substr(1, valueStr.length - 2));
+			FixedString value = FixedString(fields[fieldId].fieldSize, valueStr.substr(1, valueStr.length - 2));
 			Condition cond = Condition(attr, op, value);
 			conditions.push_back(cond);
+		}
+		Condition cond1 = conditions[conditions.size() - 1];	// 最近插入的条件。
+		Condition cond2;										// 要比较的条件。
+		vector<Condition>::iterator it;							// 条件迭代器。
+		// 判断是否可以合并条件。
+		bool flag = false;	// 为 true 则表明可以进行条件合并
+		for (it = conditions.begin(); (it+1) != conditions.end(); it++)	// 之所以不用迭代器是因为判断是否为最后一项比这麻烦。
+		{
+			cond2 = *it;						
+			if (cond2.attr == cond1.attr)
+			{
+				flag = true;
+				break;	//条件一致则进一步判断
+			}
+		}
+		if (flag)
+		{
+			if (cond1.type == 'c')
+			{
+				// 对字符串进行比较
+				if (cond1.op == EQ && cond2.op == EQ)
+				{
+					// 两个均为等于条件，此时值一致则一定同时满足，不一致则不成立。
+					if (cond1.value1.c == cond2.value1.c)
+					{
+						conditions.pop_back();	// 删除一个重复条件。
+					}
+					else
+					{
+						throw DoNotMatch();
+					}
+				}
+				else
+				{
+					// 一个为等于一个为不等于，此时值一致则不成立，不一致取等于的情况。
+					if (cond1.value1.c == cond2.value1.c)
+					{
+						throw DoNotMatch();
+					}
+					else
+					{
+						if (cond1.op == EQ)
+						{
+							conditions.erase(it);	// 删除 cond2。
+						}
+						else
+						{
+							conditions.pop_back();	// 删除 cond1。
+						}
+					}
+				}
+			}
+			else
+			{
+				// 对数值进行比较，情况更为复杂一些。
+				if (cond1.op == EQ)
+				{
+					// 第一个条件为等于，那么只有两种情况：第一个条件值在/不在第二个条件的区间内。
+					if (inCondInterval(cond1.getValue1(), cond2))
+					{
+						conditions.erase(it);		// 值在区间内，舍弃 cond2。
+					}
+					else
+					{
+						throw DoNotMatch();			// 值不在区间内，一定不成立。
+					}
+				}
+				else if (cond2.op == EQ)
+				{
+					// 第一个条件为等于，那么只有两种情况：第一个条件值在/不在第二个条件的区间内。
+					if (inCondInterval(cond2.getValue1(), cond1))
+					{
+						conditions.pop_back();		// 值在区间内，舍弃 cond1。
+					}
+					else
+					{
+						throw DoNotMatch();			// 值不在区间内，一定不成立。
+					}
+				}
+				else if (cond1.op == DIFF && !inCondInterval(cond1.getValue1(), cond2))
+				{
+					// 第一个条件为不等于且值不在第二个条件的区间内，即条件无效，舍弃 cond1。
+					conditions.pop_back();
+				}
+				else if (cond2.op == DIFF && !inCondInterval(cond2.getValue1(), cond1))
+				{
+					// 第一个条件为不等于且值不在第二个条件的区间内，即条件无效，舍弃 cond2。
+					conditions.erase(it);
+				}
+				else if (cond2.op == BETW)
+				{
+					// 第二个条件为两个值之间，那么对第一个条件的值进行判断。第一个条件新插入，不可能为"BETW"（这个条件是合并条件后生成的）。
+					if ((cond1.getValue1() <= cond2.getValue1() && cond2.eq1 == false) \
+						|| (cond1.getValue1() < cond2.getValue1() && cond2.eq1 == true))
+					{
+						// 插入的条件比区间左值小。
+						if (cond1.op == LT || cond1.op == LTE)
+						{
+							// 此时条件不可能成立。
+							throw DoNotMatch();
+						}
+						else
+						{
+							conditions.pop_back();	// 此时 cond1 不起作用。
+						}
+					}
+					else if ((cond1.getValue1() >= cond2.getValue2() && cond2.eq2 == false) \
+						|| (cond1.getValue1() > cond2.getValue2() && cond2.eq2 == true))
+					{
+						// 插入的条件比区间右值大。
+						if (cond1.op == GT || cond1.op == GTE)
+						{
+							// 此时条件不可能成立。
+							throw DoNotMatch();
+						}
+						else
+						{
+							conditions.pop_back();	// 此时 cond1 不起作用。
+						}
+					}
+					else
+					{
+						// cond1 的值在 cond2 区间内，此时对 cond2 的范围进行一些调整。
+						if (cond1.op == LT)
+						{
+							cond2.setValue2(cond1.getValue1());
+							cond2.eq2 = false;
+						}
+						else if (cond1.op == LTE)
+						{
+							cond2.setValue2(cond1.getValue1());
+							cond2.eq2 = true;
+						}
+						else if (cond1.op == GT)
+						{
+							cond2.setValue1(cond1.getValue1());
+							cond2.eq1 = false;
+						}
+						else if (cond1.op == GTE)
+						{
+							cond2.setValue2(cond1.getValue1());
+							cond2.eq1 = true;
+						}
+					}
+				}
+				else
+				{
+					// cond1 和 cond2 都为大于小于类的条件。
+					if (cond1.getValue1() < cond1.getValue1())
+					{
+						// cond1 的值比 cond2 小。
+						if ((cond1.op == LTE || cond1.op == LT) && (cond2.op == LTE || cond2.op == LT))
+						{
+							// 舍去 cond2 的情形。
+							conditions.erase(it);
+						}
+						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == GTE || cond2.op == GT))
+						{
+							// 舍去 cond1 的情形。
+							conditions.pop_back();
+						}
+						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == LTE || cond2.op == LT))
+						{
+							// 取区间的情形。
+							conditions.erase(it);
+							conditions.pop_back();
+							if (cond1.type == 'd')
+							{
+								Condition cond3 = Condition(cond1.attr, cond1.value1.d, cond1.op == GTE, cond2.value1.d, cond2.op == LTE);
+								conditions.push_back(cond3);
+							}
+							else if (cond1.type == 'f')
+							{
+								Condition cond3 = Condition(cond1.attr, cond1.value1.f, cond1.op == GTE, cond2.value1.f, cond2.op == LTE);
+								conditions.push_back(cond3);
+							}
+						}
+						else if ((cond1.op == LTE || cond1.op == LT) && (cond2.op == GTE || cond2.op == GT))
+						{
+							// 条件不可能成立。
+							throw DoNotMatch();
+						}
+					}
+					else if (cond1.getValue1() == cond2.getValue1())
+					{
+						// 两个值相等。
+						if ((cond1.op == LTE || cond1.op == GTE) && (cond2.op == LTE || cond2.op == GTE))
+						{
+							// 条件可以合并成相等。
+							conditions.erase(it);
+							conditions.pop_back();
+							if (cond1.type == 'd')
+							{
+								Condition cond3 = Condition(cond1.attr, EQ, cond1.value1.d);
+							}
+							else if (cond1.type == 'f')
+							{
+								Condition cond3 = Condition(cond1.attr, EQ, cond1.value1.f);
+							}
+						}
+						else
+						{
+							// 条件不可能成立。
+							throw DoNotMatch();
+						}
+					}
+					else if (cond1.getValue1() > cond2.getValue1())
+					{
+						// cond1 的值比 cond2 大。
+						if ((cond1.op == LTE || cond1.op == LT) && (cond2.op == LTE || cond2.op == LT))
+						{
+							// 舍去 cond1 的情形。
+							conditions.pop_back();
+						}
+						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == GTE || cond2.op == GT))
+						{
+							// 舍去 cond2 的情形。
+							conditions.erase(it);
+						}
+						else if ((cond1.op == LTE || cond1.op == LT) && (cond2.op == GTE || cond2.op == GT))
+						{
+							// 取区间的情形。
+							conditions.erase(it);
+							conditions.pop_back();
+							if (cond1.type == 'd')
+							{
+								Condition cond3 = Condition(cond1.attr, cond2.value1.d, cond2.op == GTE, cond1.value1.d, cond1.op == LTE);
+								conditions.push_back(cond3);
+							}
+							else if (cond1.type == 'f')
+							{
+								Condition cond3 = Condition(cond1.attr, cond2.value1.f, cond2.op == GTE, cond1.value1.f, cond1.op == LTE);
+								conditions.push_back(cond3);
+							}
+						}
+						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == LTE || cond2.op == LT))
+						{
+							// 条件不可能成立。
+							throw DoNotMatch();
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -960,4 +1307,221 @@ void fieldsProcess(const string table, const string info, vector<string> &fieldL
 			fieldList.push_back(fields[i]);
 		}
 	}
+}
+
+// recordProcess 函数：根据条件一步步得到一个表中符合条件的偏移量列表。
+// 输入：
+// table 为数据表的名称。
+// conditions 为给定的条件。
+struct recordRange recordProcess(const string table, vector<Condition> &conditions)
+{
+	// 第一步：根据索引找出包含的记录和不包含的记录。
+	vector<int> range;		// 记录的最大范围。
+	vector<int> excluded;	// 需要排除的记录。
+	bool norange = true;	// 是否目前没有记录范围（和range为空进行区分）
+	bool noexcluded = true;	// 是否目前没有排除记录（和excluded为空进行区分）
+	for (vector<Condition>::iterator it = conditions.begin(); it != conditions.end(); it++)
+	{
+		vector<int> range2, excluded2;
+		bool range2used = false, excluded2used = false;
+		string index = "";	// 要查找数据的索引的全称。
+		string indexName = indexInField(currentDatabase, table, (*it).attr);
+		if (indexName != "")
+		{
+			index = currentDatabase + "-" + indexName;
+		}
+		else if (isPrimaryKey(currentDatabase, table, (*it).attr))
+		{
+			index = currentDatabase + "#" + table;
+		}
+		if (index != "")
+		{
+			if ((*it).op == EQ)
+			{
+				if ((*it).type == 'c')
+				{
+					range2.push_back(findIndexNode(index, (*it).value1.c));
+					range2used = true;
+				}
+				else if ((*it).type == 'd')
+				{
+					range2.push_back(findIndexNode(index, (*it).value1.d));
+					range2used = true;
+				}
+				else if ((*it).type == 'f')
+				{
+					range2.push_back(findIndexNode(index, (*it).value1.f));
+					range2used = true;
+				}
+			}
+			else if ((*it).op == DIFF)
+			{
+				if ((*it).type == 'c')
+				{
+					excluded2.push_back(findIndexNode(index, (*it).value1.c));
+					excluded2used = true;
+				}
+				else if ((*it).type == 'd')
+				{
+					excluded2.push_back(findIndexNode(index, (*it).value1.d));
+					excluded2used = true;
+				}
+				else if ((*it).type == 'f')
+				{
+					excluded2.push_back(findIndexNode(index, (*it).value1.f));
+					excluded2used = true;
+				}
+			}
+			else if ((*it).op == GT || (*it).op == GTE)
+			{
+				if ((*it).type == 'd')
+				{
+					range2 = findIndexNodes(index, (*it).value1.d, (*it).op == GTE);
+					range2used = true;
+				}
+				else if ((*it).type == 'f')
+				{
+					range2 = findIndexNodes(index, (*it).value1.f, (*it).op == GTE);
+					range2used = true;
+				}
+			}
+			else if ((*it).op == LT || (*it).op == LTE)
+			{
+				if ((*it).type == 'd')
+				{
+					excluded2 = findIndexNodes(index, (*it).value1.d, (*it).op == LT);
+					excluded2used = true;
+				}
+				else if ((*it).type == 'f')
+				{
+					excluded2 = findIndexNodes(index, (*it).value1.f, (*it).op == LT);
+					excluded2used = true;
+				}
+			}
+			else if ((*it).op == BETW)
+			{
+				if ((*it).type == 'd')
+				{
+					range2 = findIndexNodes(index, (*it).value1.d, (*it).eq1, (*it).value2.d, (*it).eq2);
+					range2used = true;
+				}
+				else if ((*it).type == 'f')
+				{
+					range2 = findIndexNodes(index, (*it).value1.f, (*it).eq1, (*it).value2.f, (*it).eq2);
+					range2used = true;
+				}
+			}
+
+			if (range2used)
+			{
+				if (norange)
+				{
+					range = range2;
+					norange = false;
+				}
+				else
+				{
+					range = unionOffsets(range, range2);
+				}
+			}
+			if (excluded2used)
+			{
+				if (noexcluded)
+				{
+					excluded = excluded2;
+					noexcluded = false;
+				}
+				else
+				{
+					excluded = mergeOffsets(excluded, excluded2);
+				}
+			}
+
+			conditions.erase(it);
+		}
+	}
+	struct recordRange records = { range, excluded, norange };
+	return records;
+}
+
+// mergeOffsets 函数：合并两个 offset 的 vector。
+vector<int> mergeOffsets(vector<int> v1, vector<int> v2)
+{
+	vector<int>::iterator i1 = v1.begin(), i2 = v2.begin();
+	vector<int> v3;
+	while (i1 != v1.end() && i2 != v2.end())
+	{
+		if ((*i1) == (*i2))
+		{
+			i1++;
+		}
+		else if ((*i1) < (*i2))
+		{
+			v3.push_back(*i1);
+			i1++;
+		}
+		else
+		{
+			v3.push_back(*i2);
+			i2++;
+		}
+	}
+	while (i1 != v1.end())
+	{
+		v3.push_back(*i1);
+		i1++;
+	}
+	while (i2 != v2.end())
+	{
+		v3.push_back(*i2);
+		i2++;
+	}
+	return v3;
+}
+
+// unionOffsets 函数：取 v1 和 v2 的交集。
+vector<int> unionOffsets(vector<int> v1, vector<int> v2)
+{
+	vector<int>::iterator i1 = v1.begin(), i2 = v2.begin();
+	vector<int> v3;
+	while (i1 != v1.end() && i2 != v2.end())
+	{
+		if ((*i1) > (*i2))
+		{
+			i2++;
+		}
+		if ((*i1) < (*i2))
+		{
+			i1++;
+		}
+		if ((*i1) == (*i2))
+		{
+			v3.push_back(*i1);
+			i2++;
+		}
+	}
+	return v3;
+}
+
+// excludeOffsets 函数：在 v1 中排除 v2 元素。
+vector<int> excludeOffsets(vector<int> v1, vector<int> v2)
+{
+	vector<int>::iterator i1 = v1.begin(), i2 = v2.begin();
+	while (i1 != v1.end() && i2 != v2.end())
+	{
+		if ((*i1) > (*i2))
+		{
+			i2++;
+		}
+		if ((*i1) < (*i2))
+		{
+			i1++;
+		}
+		if ((*i1) == (*i2))
+		{
+			v1.erase(i1);
+			i2++;
+		}
+	}
+	return v1;
 }

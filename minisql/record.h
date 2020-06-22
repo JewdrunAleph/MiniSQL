@@ -114,17 +114,29 @@ const int getUniqueOffset(const string, const string, const FixedString);
 const int insertRecord(const string, const vector<Record_node>);
 // clearRecord 函数：清空给定名称的数据表内的所有记录。(注意是清空不是删除！)
 void clearRecord(const string);
-// findRecords 函数：根据给定条件查找符合条件的数据表内的记录并返回其值。
-// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，条件。
+// findRecords 函数：根据给定条件查找某数据表内所有记录中符合条件的记录并返回其值。
 // 每一条记录分别整成一个 vector<Record_node>，加上 offset 变成 struct Record ，并且将这些记录再整成一个 vector。
-const vector<struct Record> findRecords(const string, const vector<Condition>);
+// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，条件，排除范围(即在排除范围内的记录不用判断直接排除)。
+const vector<struct Record> findRecords(const string, const vector<Condition>, const vector<int>);
+// findRecords 函数：根据给定条件查找某数据表内的某一范围的记录中符合条件的记录并返回其值。
+// 每一条记录分别整成一个 vector<Record_node>，加上 offset 变成 struct Record ，并且将这些记录再整成一个 vector。
+// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，条件，查找范围(即只在对应 offset 的记录中进行逐一判断)，排除范围。
+const vector<struct Record> findRecords(const string, const vector<Condition>, const vector<int>, const vector<int>);
 // deleteRecord 函数：删除指定数据表的一个指定 offset 的记录。
 // 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，偏移量。
 void deleteRecord(const string, const int);
-// printRecord 函数：向屏幕输出查询的数据信息。
-// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，输出的字段列表，[给定的条件]。
-void printRecord(const string, const vector<string>);
-void printRecord(const string, const vector<string>, const vector<Condition>);
+// printRecords 函数：根据给定条件查找某数据表内所有记录并向屏幕输出数据信息。
+// 每一条记录分别整成一个 vector<Record_node>，加上 offset 变成 struct Record ，并且将这些记录再整成一个 vector。
+// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，输出的字段列表。
+const vector<struct Record> printRecords(const string, const vector<string>);
+// printRecords 函数：根据给定条件查找某数据表内所有记录中符合条件的记录并向屏幕输出数据信息。
+// 每一条记录分别整成一个 vector<Record_node>，加上 offset 变成 struct Record ，并且将这些记录再整成一个 vector。
+// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，条件，输出的字段列表，排除范围(即在排除范围内的记录不用判断直接排除)。
+const vector<struct Record> printRecords(const string, const vector<Condition>, const vector<string>, const vector<int>);
+// printRecords 函数：根据给定条件查找某数据表内的某一范围的记录中符合条件的记录并向屏幕输出数据信息。
+// 每一条记录分别整成一个 vector<Record_node>，加上 offset 变成 struct Record ，并且将这些记录再整成一个 vector。
+// 输入参数分别为：数据表名(格式为"<数据库名>-<数据表名>")，条件，输出的字段列表，查找范围(即只在对应 offset 的记录中进行逐一判断)，排除范围。
+const vector<struct Record> printRecords(const string, const vector<Condition>, const vector<string>, const vector<int>, const vector<int>);
 // printNoRecordFound 函数：向屏幕输出查询结果为空。
 void printNoRecordFound();
 #endif

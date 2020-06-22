@@ -28,6 +28,15 @@ void deleteIndexNode(const string, const FixedString);
 int findIndexNode(const string, const int);
 int findIndexNode(const string, const float);
 int findIndexNode(const string, const FixedString);
+// findIndexNodes 函数：寻找索引中大于(等于)某个值的节点在 record 中的偏移量。-1代表找不到。
+// 输入参数：索引名，值，是否包括等于该值的节点(true 为包括)
+// 输出的偏移量请从小到大排列！
+vector<int> findIndexNodes(const string, const int, const bool);
+vector<int> findIndexNodes(const string, const float, const bool);
+// findIndexNodes 函数：寻找索引中在某个值区间的节点在 record 中的偏移量。-1代表找不到。
+// 输入参数：索引名，区间下限，是否包括区间下限，区间上限，是否包括区间上限。
+// 输出的偏移量请从小到大排列！
+vector<int> findIndexNodes(const string, const float, const bool, const float, const bool);
 // clearIndex 函数：清空给定名称的索引中的全部值(注意是清空不是删除！)。
 void clearIndex(const string);
 #endif
