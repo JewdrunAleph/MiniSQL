@@ -56,7 +56,7 @@ command Interpreter(string statement)
 		cmd = quit_clause(SQL, start,cmd);
 	//获取帮助
 	else if (temp == "help")
-		strcpy_s(cmd.op,"80");
+		strcpy_s(cmd.op,"60");
 	//若为非法语句
 	else
 	{
@@ -109,7 +109,7 @@ command create_database(string SQL, int start,command cmd)
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "error: database name has not been specified!" << endl;
+		cout << "syntax error: database name has not been specified!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else
@@ -119,7 +119,7 @@ command create_database(string SQL, int start,command cmd)
 		//若为非法信息，打印出错信息
 		if (SQL.at(start) != ';' || start != SQL.length() - 1)
 		{
-			cout << "error12:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
+			cout << "syntax error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
 			strcpy_s(cmd.op, "99");
 		}
 		//返回create database语句的内部形式
@@ -143,7 +143,7 @@ command create_table(string SQL, int start,command cmd)
 		start++;
 	if ((end = SQL.find('(', start)) == -1)
 	{
-		cout << "error: missing ( in the statement!" << endl;
+		cout << "syntax error: missing ( in the statement!" << endl;
 		strcpy_s(cmd.op, "99");
 		return cmd;
 	}
@@ -166,25 +166,14 @@ command create_table(string SQL, int start,command cmd)
 		start++;
 	if ( (end = SQL.find_last_of(')')) == -1)
 	{
-		cout << "error: missing ) in the statement!" << endl;
+		cout << "syntax error: missing ) in the statement!" << endl;
 		strcpy_s(cmd.op, "99");
 		return cmd;
 	}
-	//如果）与；之间有字符
-	if (SQL.at(end + 2) != ';') {
-		cout << "syntax error: syntax error for create table statement!" << endl;
-		strcpy_s(cmd.op, "99");
-		return cmd;
-	}
+	
 	temp = SQL.substr(start, end - start);
-	if (temp.empty()) {
-		cout << "syntax error: syntax error for create table statement!" << endl;
-		strcpy_s(cmd.op, "99");
-	}
-	else {
-		strcpy_s(cmd.op, "10");
-		cmd.arg2 = temp;
-	}
+	strcpy_s(cmd.op, "10");
+	cmd.arg2 = temp;
 	return cmd;
 }
 
@@ -382,7 +371,7 @@ command drop_database(string SQL, int start,command cmd)
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "error: database name has not been specified!" << endl;
+		cout << "syntax error: database name has not been specified!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else
@@ -392,7 +381,7 @@ command drop_database(string SQL, int start,command cmd)
 		//若为非法信息，打印出错信息
 		if (SQL.at(start) != ';' || start != SQL.length() - 1)
 		{
-			cout << "error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
+			cout << "syntax error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
 			strcpy_s(cmd.op, "99");
 		}
 		//返回drop database语句的内部形式
@@ -420,7 +409,7 @@ command drop_table(string SQL, int start,command cmd)
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "error: table name has not been specified!" << endl;
+		cout << "syntax error: table name has not been specified!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else
@@ -430,7 +419,7 @@ command drop_table(string SQL, int start,command cmd)
 		//若为非法信息，打印出错信息
 		if (SQL.at(start) != ';' || start != SQL.length() - 1)
 		{
-			cout << "error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid table name!" << endl;
+			cout << "syntax error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid table name!" << endl;
 			strcpy_s(cmd.op, "99");
 		}
 		//返回drop table语句的内部形式
@@ -459,7 +448,7 @@ command drop_index(string SQL, int start,command cmd)
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "error: index name has not been specified!" << endl;
+		cout << "syntax error: index name has not been specified!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else
@@ -469,7 +458,7 @@ command drop_index(string SQL, int start,command cmd)
 		//若为非法信息，打印出错信息
 		if (SQL.at(start) != ';' || start != SQL.length() - 1)
 		{
-			cout << "error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid index name!" << endl;
+			cout << "syntax error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid index name!" << endl;
 			strcpy_s(cmd.op, "99");
 		}
 		//返回drop index语句的内部形式
@@ -496,7 +485,7 @@ command drop_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create statement!" << endl;
+		cout << "syntax error: syntax error for drop statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	//若为database,继续验证
@@ -533,7 +522,7 @@ command select_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create index statement!" << endl;
+		cout << "syntax error: syntax error for select statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else
@@ -548,7 +537,7 @@ command select_clause(string SQL, int start,command cmd) {
 		//若无，打印出错信息
 		if (temp.empty())
 		{
-			cout << "syntax error: syntax error for create index statement!" << endl;
+			cout << "syntax error: syntax error for select statement!" << endl;
 			strcpy_s(cmd.op, "99");
 		}
 		else if (temp == "from"){
@@ -561,7 +550,7 @@ command select_clause(string SQL, int start,command cmd) {
 			//若无，打印出错信息
 			if (temp.empty())
 			{
-				cout << "error: missing ; in the statement!" << endl;
+				cout << "syntax error: missing ; in the statement!" << endl;
 				strcpy_s(cmd.op, "99");
 			}
 			else {
@@ -575,7 +564,7 @@ command select_clause(string SQL, int start,command cmd) {
 				//若无，打印出错信息
 				if (temp.empty())
 				{
-					cout << "error: missing ; in the statement!" << endl;
+					cout << "syntax error: missing ; in the statement!" << endl;
 					strcpy_s(cmd.op, "99");
 				}
 				else if (temp == ";") {
@@ -588,7 +577,7 @@ command select_clause(string SQL, int start,command cmd) {
 					while (SQL.at(start) == ' ') start++;
 					temp = SQL.substr(start, end - start - 1);
 					if (temp.empty()) {
-						cout << "error: missing condition in the statement!" << endl;
+						cout << "syntax error: missing condition in the statement!" << endl;
 						strcpy_s(cmd.op, "99");
 					}
 					else cmd.arg3 = temp;
@@ -626,7 +615,7 @@ command insert_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create statement!" << endl;
+		cout << "syntax error: syntax error for insert statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	//若为into,继续验证
@@ -640,7 +629,7 @@ command insert_clause(string SQL, int start,command cmd) {
 		//若无，打印出错信息
 		if (temp.empty())
 		{
-			cout << "syntax error: syntax error for create statement!" << endl;
+			cout << "syntax error: syntax error for insert statement!" << endl;
 			strcpy_s(cmd.op, "99");
 			return cmd;
 		}
@@ -656,7 +645,7 @@ command insert_clause(string SQL, int start,command cmd) {
 			//若无，打印出错信息
 			if (temp.empty())
 			{
-				cout << "syntax error: syntax error for create statement!" << endl;
+				cout << "syntax error: syntax error for insert statement!" << endl;
 				strcpy_s(cmd.op, "99");
 				return cmd;
 			}
@@ -690,7 +679,7 @@ command insert_into_values(string SQL, int start, string sql,command cmd) {
 
 	if ((start = SQL.find('(', start)) == -1)
 	{
-		cout << "error: missing ( in the statement!" << endl;
+		cout << "syntax error: missing ( in the statement!" << endl;
 		strcpy_s(cmd.op, "99");
 		return cmd;
 	}
@@ -701,25 +690,15 @@ command insert_into_values(string SQL, int start, string sql,command cmd) {
 		start++;
 	if ((end = SQL.find_last_of(')')) == -1)
 	{
-		cout << "error: missing ) in the statement!" << endl;
+		cout << "syntax error: missing ) in the statement!" << endl;
 		strcpy_s(cmd.op, "99");
 		return cmd;
 	}
-	//如果）与；之间有字符
-	if (SQL.at(end + 2) != ';') {
-		cout << "syntax error: syntax error for create table statement!" << endl;
-		strcpy_s(cmd.op, "99");
-		return cmd;
-	}
+
 	temp = SQL.substr(start, end - start);
-	if (temp.empty()) {
-		cout << "syntax error: syntax error for create table statement!" << endl;
-		strcpy_s(cmd.op, "99");
-	}
-	else {
-		strcpy_s(cmd.op, "30");
-		cmd.arg2 = temp;
-	}
+	strcpy_s(cmd.op, "30");
+	cmd.arg2 = temp;
+
 	return cmd;
 }
 
@@ -737,7 +716,7 @@ command delete_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create index statement!" << endl;
+		cout << "syntax error: syntax error for delete statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else if (temp=="from")
@@ -751,7 +730,7 @@ command delete_clause(string SQL, int start,command cmd) {
 		//若无，打印出错信息
 		if (temp.empty())
 		{
-			cout << "syntax error: syntax error for create index statement!" << endl;
+			cout << "syntax error: syntax error for delete statement!" << endl;
 			strcpy_s(cmd.op, "99");
 		}
 		else {
@@ -765,7 +744,7 @@ command delete_clause(string SQL, int start,command cmd) {
 			//若无，打印出错信息
 			if (temp.empty())
 			{
-				cout << "error: missing ; in the statement!" << endl;
+				cout << "syntax error: missing ; in the statement!" << endl;
 				strcpy_s(cmd.op, "99");
 			}
 			else if (temp == ";") {
@@ -780,7 +759,7 @@ command delete_clause(string SQL, int start,command cmd) {
 				while (SQL.at(start) == ' ') start++;
 				temp = SQL.substr(start, end - start - 1);
 				if (temp.empty()) {
-					cout << "error: missing condition in the statement!" << endl;
+					cout << "syntax error: missing condition in the statement!" << endl;
 					strcpy_s(cmd.op, "99");
 				}
 				else cmd.arg2 = temp;
@@ -817,13 +796,13 @@ command use_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create statement!" << endl;
+		cout << "syntax error: syntax error for use statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	//继续检查
 	else if (SQL.at(start) != ';' || start != SQL.length() - 1)
 	{
-			cout << "error12:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
+			cout << "syntax error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
 			strcpy_s(cmd.op, "99");
 	}
 	else {
@@ -849,13 +828,13 @@ command execfile_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create statement!" << endl;
+		cout << "syntax error: syntax error for execfile statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	//继续检查
 	else if (SQL.at(start) != ';' || start != SQL.length() - 1)
 	{
-		cout << "error12:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid database name!" << endl;
+		cout << "syntax error:" << SQL.substr(index, SQL.length() - index - 2) << "---is not a valid txt name!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	else {
@@ -880,7 +859,7 @@ command quit_clause(string SQL, int start,command cmd) {
 	//若无，打印出错信息
 	if (temp.empty())
 	{
-		cout << "syntax error: syntax error for create statement!" << endl;
+		cout << "syntax error: syntax error for quit statement!" << endl;
 		strcpy_s(cmd.op, "99");
 	}
 	//若为;,退出程序
