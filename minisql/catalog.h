@@ -2,6 +2,8 @@
 #define _CATALOG_H
 
 #include <vector>
+#include <set>
+#include <string>
 #include "api.h"
 using namespace std;
 

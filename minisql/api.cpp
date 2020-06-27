@@ -1,9 +1,4 @@
 #include "api.h"
-#include "catalog.h"
-#include "interpreter.h"
-#include "index.h"
-#include "record.h"
-#include "minisql.h"
 
 using namespace std;
 
@@ -737,7 +732,7 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				// 主码的 unique 测试。
 				if (findIndexNode(currentDatabase + "#" + table, value) != -1)
 				{
-					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 				}
 			}
 			else if (fields[i].unique)
@@ -748,14 +743,14 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				{
 					if (findIndexNode(currentDatabase + "-" + indexName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 					}
 				}
 				else
 				{
 					if (getUniqueOffset(currentDatabase + "-" + table, fields[i].fieldName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 					}
 				}
 			}
@@ -790,7 +785,7 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				// 主码的 unique 测试。
 				if (findIndexNode(currentDatabase + "#" + table, value) != -1)
 				{
-					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 				}
 			}
 			else if (fields[i].unique)
@@ -801,14 +796,14 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				{
 					if (findIndexNode(currentDatabase + "-" + indexName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 					}
 				}
 				else
 				{
 					if (getUniqueOffset(currentDatabase + "-" + table, fields[i].fieldName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 					}
 				}
 			}
@@ -831,7 +826,7 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				// 主码的 unique 测试。
 				if (findIndexNode(currentDatabase + "#" + table, value) != -1)
 				{
-					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 				}
 			}
 			else if (fields[i].unique)
@@ -842,14 +837,14 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				{
 					if (findIndexNode(currentDatabase + "-" + indexName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 					}
 				}
 				else
 				{
 					if (getUniqueOffset(currentDatabase + "-" + table, fields[i].fieldName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + ".");
 					}
 				}
 			}

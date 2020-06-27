@@ -1,7 +1,4 @@
 #include"minisql.h"
-#include"Interpreter.h"
-#include"api.h"
-#include <fstream>
 
 using namespace std;
 
@@ -97,4 +94,3 @@ void main()
 	}
 
 }
-

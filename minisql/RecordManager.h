@@ -3,11 +3,14 @@
 //#include "stdafx.h"
 #include "Condition.h"
 #include "Attribute.h"
-#include "RecordManager.h"
-#include "BufferManager.h"
-#include "Minisql.h"
+//#include "RecordManager.h"
+#include "buffer_manager.h"
+#include "minisql.h"
 #include <string>
 #include <vector>
+#include <iostream>
+#include <cstring>
+#include "api.h"
 using namespace std;
 class API;
 class RecordManager{

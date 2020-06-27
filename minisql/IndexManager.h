@@ -5,8 +5,12 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <vector>
+#include <iostream>
 #include "Attribute.h"
 #include "BPlusTree.h"
+#include "api.h"
+#include "IndexInfo.h"
 
 class API;
 

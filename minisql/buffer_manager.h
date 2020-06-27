@@ -1,4 +1,4 @@
-#ifdef BUFFER_MANAGER_H
+#ifndef BUFFER_MANAGER_H
 #define BUFFER_MANAGER_H
 
 #define PageSize 4096  						//4K
