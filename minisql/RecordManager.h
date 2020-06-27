@@ -47,4 +47,7 @@ private:
     bool contentConditionFit(char* content, int type, Condition* condition);
     void contentPrint(char * content, int type);
 };
+
+
+
 #endif
