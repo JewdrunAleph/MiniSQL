@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 #include "minisql.h"
+#include "catalog.h"
+#include "interpreter.h"
+#include "index.h"
 #include "record.h"
 using namespace std;
 

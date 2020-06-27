@@ -18,6 +18,32 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="api.h" />
+    <ClInclude Include="Attribute.h" />
+    <ClInclude Include="BPlusTree.h" />
+    <ClInclude Include="buffer_manager.h" />
+    <ClInclude Include="catalog.h" />
+    <ClInclude Include="Condition.h" />
+    <ClInclude Include="index.h" />
+    <ClInclude Include="IndexInfo.h" />
+    <ClInclude Include="IndexManager.h" />
+    <ClInclude Include="Interpreter.h" />
+    <ClInclude Include="minisql.h" />
+    <ClInclude Include="record.h" />
+    <ClInclude Include="RecordManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="api.cpp" />
+    <ClCompile Include="Attribute.cpp" />
+    <ClCompile Include="buffer_manager.cpp" />
+    <ClCompile Include="catalog_manager.cpp" />
+    <ClCompile Include="Condition.cpp" />
+    <ClCompile Include="IndexManager.cpp" />
+    <ClCompile Include="Interpreter.cpp" />
+    <ClCompile Include="minisql.cpp" />
+    <ClCompile Include="RecordManager.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{5275DE4B-C627-4FA4-ADBD-EB759E3BF689}</ProjectGuid>
@@ -114,30 +140,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\api.h" />
-    <ClInclude Include="..\Attribute.h" />
-    <ClInclude Include="..\BPlusTree.h" />
-    <ClInclude Include="..\buffer_manager.h" />
-    <ClInclude Include="..\catalog.h" />
-    <ClInclude Include="..\Condition.h" />
-    <ClInclude Include="..\IndexInfo.h" />
-    <ClInclude Include="..\IndexManager.h" />
-    <ClInclude Include="..\Interpreter.h" />
-    <ClInclude Include="..\minisql.h" />
-    <ClInclude Include="..\RecordManager.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\api.cpp" />
-    <ClCompile Include="..\Attribute.cpp" />
-    <ClCompile Include="..\buffer_manager.cpp" />
-    <ClCompile Include="..\catalog_manager.cpp" />
-    <ClCompile Include="..\Condition.cpp" />
-    <ClCompile Include="..\IndexManager.cpp" />
-    <ClCompile Include="..\Interpreter.cpp" />
-    <ClCompile Include="..\minisql.cpp" />
-    <ClCompile Include="..\RecordManager.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
