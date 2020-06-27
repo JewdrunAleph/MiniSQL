@@ -79,7 +79,7 @@ void executeCommand(const struct command cmd)
 			{
 				throw SqlError("Table already exists.");
 			}
-			vector<struct field> fields(32); // 最终生成的各个字段，具体的解释见"catalog.h"文件。
+			vector<struct field> fields; // 最终生成的各个字段，具体的解释见"catalog.h"文件。
 			string primaryKey = ""; // 数据表的主码。
 			tableCreateProcess(cmd.arg2, fields, primaryKey); // 处理 arg2. 因为实在内容太复杂因此单独列为一个函数。
 			createTable(currentDatabase, cmd.arg1, fields, primaryKey);
@@ -499,7 +499,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 		lpos = rpos + 1;
 
 		int state = 0; // 判断当前处理的状态。
-		int wpos; // 当前单词的左界。
+		int wpos = 0; // 当前单词的左界。
 		vector<string> words;
 		unsigned int i;
 		// 开始分析这坨玩意。
@@ -522,8 +522,8 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			{
 				if (line[i] == '(') // 读取的为参数的情况。
 				{
-					wpos = i + 1;
 					words.push_back(line.substr(wpos, i - wpos));
+					wpos = i + 1;
 					state = 2;
 				}
 				else if (line[i] == ' ') // 单词读取完毕，此时开始处理单词。
@@ -537,7 +537,9 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 				if (line[i] == ')') // 参数读取完毕。
 				{
 					string param;
-					param = line.substr(wpos, i - 1 - wpos);
+					param = line.substr(wpos, i - wpos);
+					size_t testa = param.find_first_not_of(' ');
+					size_t testb = param.find_last_not_of(' ');
 					param = param.substr(param.find_first_not_of(' '), param.find_last_not_of(' ') + 1);
 					param = "(" + param + ")"; // 将参数进行格式化。
 					words.push_back(param);
@@ -586,7 +588,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			unsigned int fieldSize = 0; // 分析得到的字段长度。
 			bool unique = false; // 分析得到的字段是否唯一。
 			bool flag = false; // 判断字段名是否有效。SQL 中要求字段命名必须为字母、数字或下划线，无首字符不得为数字的要求。
-			for (char c: words[0])
+			for (char c : words[0])
 			{
 				if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_'))
 				{
@@ -595,11 +597,11 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			}
 			if (flag)
 			{
-				throw SqlError("Invalid field name \""+ words[0] +"\".");
+				throw SqlError("Invalid field name \"" + words[0] + "\".");
 			}
 			if (words[1] == "char")
 			{
-				if (words.size() > 4 || words.size() < 3 || (words.size() == 4 && words[4] != "unique")) // 如果格式不正确。
+				if (words.size() > 4 || words.size() < 3 || (words.size() == 4 && words[3] != "unique")) // 如果格式不正确。
 				{
 					throw SqlError("Invalid syntax.");
 				}
@@ -627,7 +629,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 				{
 					throw SqlError("Char length of field \"" + words[0] + "\" should between 1 and 255.");
 				}
-				if (words.size() == 4 && words[4] == "unique")
+				if (words.size() == 4 && words[3] == "unique")
 				{
 					unique = true;
 				}
@@ -646,7 +648,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			}
 			else
 			{
-				if (words.size() > 3 || words.size() < 2 || (words.size() == 3 && words[3] != "unique")) // 如果格式不正确。
+				if (words.size() > 3 || words.size() < 2 || (words.size() == 3 && words[2] != "unique")) // 如果格式不正确。
 				{
 					throw SqlError("Invalid syntax.");
 				}
@@ -660,13 +662,28 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 				}
 				fieldName = words[0];
 				fieldType = words[1];
+				if (words[1] == "int")
+				{
+					fieldSize = sizeof(int);
+				}
+				else if (words[1] == "float")
+				{
+					fieldSize = sizeof(float);
+				}
 				const struct field targetField = { fieldName, fieldType, fieldSize, unique };
 				fields.push_back(targetField);
+			}
+			// 判断字段是否重名
+			for (unsigned int i = 0; i < fields.size() - 1; i++)
+			{
+				if (fields[i].fieldName == fields[fields.size() - 1].fieldName)
+				{
+					throw SqlError("Multiple field name \"" + fields[i].fieldName + "\".");
+				}
 			}
 		}
 	} while (rpos != string::npos);
 }
-
 // recordInsertProcess 函数：处理插入数据的函数。
 // 输入：
 // table 为数据表名。
