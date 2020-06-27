@@ -17,16 +17,6 @@ using namespace std;
 
 static string currentDatabase = "";    // 当前使用的数据库名称。
 
-// 事先声明一些模块内部使用的函数。因为是模块内部用的，因此建议【不要】移到头文件里面。
-
-void tableCreateProcess(const string, vector<struct field>&, string &);
-void recordInsertProcess(const string, const string, const vector<struct field>, vector<Record_node> &);
-void conditionProcess(const string, const vector<struct field>, vector<Condition> &);
-void fieldsProcess(const string, const string, vector<string> &);
-struct recordRange recordProcess(const string, vector<Condition> &);
-vector<int> mergeOffsets(vector<int>, vector<int>);
-vector<int> excludeOffsets(vector<int>, vector<int>);
-
 // executeCommand 函数：API 模块的核心函数。
 // 本函数负责将 interpreter 处理得到的命令分给 Catalog Manager, Record Manager 和 Index Manager 进行处理。
 // 本函数的输入 cmd 为 struct command，具体的解释见"interpreter.h"文件。
@@ -64,10 +54,10 @@ void executeCommand(const struct command cmd)
 		}
 		vector<string> tableList = tablesInDatabase(cmd.arg1);
 		// 删除数据表及数据表中的索引。
-		for (int i = 0; i < tableList.size(); i++)
+		for (unsigned int i = 0; i < tableList.size(); i++)
 		{
 			vector<string> indice = indiceInTable(currentDatabase, tableList[i]);
-			for (int j = 0; j < indice.size(); j++)
+			for (unsigned int j = 0; j < indice.size(); j++)
 			{
 				deleteIndex(currentDatabase + "-" + indice[j]);
 			}
@@ -103,7 +93,7 @@ void executeCommand(const struct command cmd)
 			// 对主码创建的索引不用 catalog manager 单独管理。
 			if (primaryKey != "")
 			{
-				int i;
+				unsigned int i = 0;
 				for (i = 0; i < fields.size(); i++)
 				{
 					if (fields[i].fieldName == primaryKey)
@@ -135,7 +125,7 @@ void executeCommand(const struct command cmd)
 			}
 			// 删除数据表及数据表中的索引。
 			vector<string> indice = indiceInTable(currentDatabase, cmd.arg1);
-			for (int i = 0; i < indice.size(); i++)
+			for (unsigned int i = 0; i < indice.size(); i++)
 			{
 				deleteIndex(currentDatabase + "-" + indice[i]);
 			}
@@ -235,7 +225,7 @@ void executeCommand(const struct command cmd)
 			const int offset = insertRecord(currentDatabase + "-" + cmd.arg1, record);
 			// 判断数据表是否有索引，如果有则插入对应数据。
 			vector<string> indice;
-			for (int i = 0; i < fields.size(); i++)
+			for (unsigned int i = 0; i < fields.size(); i++)
 			{
 				string index = "";	// 要插入数据的索引的全称。
 				string indexName = indexInField(currentDatabase, cmd.arg1, fields[i].fieldName);
@@ -330,10 +320,10 @@ void executeCommand(const struct command cmd)
 						indice.push_back("");
 					}
 				}
-				for (int i = 0; i < results.size(); i++)
+				for (unsigned int i = 0; i < results.size(); i++)
 				{
 					const vector<Record_node> result = results[i].list;
-					for (int j = 0; j < result.size(); j++)
+					for (unsigned int j = 0; j < result.size(); j++)
 					{
 						if (indice[j] != "")
 						{
@@ -475,8 +465,8 @@ bool inCondInterval(float value, const Condition cond)
 	}
 	else if (cond.op == BETW)
 	{
-		if ((value <= cond.getValue1 && cond.eq1 == false) || (value < cond.getValue1 && cond.eq1 == true)
-			|| (value >= cond.getValue2 && cond.eq2 == false) || (value > cond.getValue2 && cond.eq2 == true))
+		if ((value <= cond.getValue1() && cond.eq1 == false) || (value < cond.getValue1() && cond.eq1 == true)
+			|| (value >= cond.getValue2() && cond.eq2 == false) || (value > cond.getValue2() && cond.eq2 == true))
 		{
 			return false;
 		}
@@ -516,7 +506,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 		int state = 0; // 判断当前处理的状态。
 		int wpos; // 当前单词的左界。
 		vector<string> words;
-		int i;
+		unsigned int i;
 		// 开始分析这坨玩意。
 		for (i = 0; i < line.length(); i++)
 		{
@@ -569,7 +559,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			throw SqlError("Missing closed bracket.");
 		}
 		// 判断语义。
-		if (words.size >= 3 && words[0] == "primary" && words[1] == "key" \
+		if (words.size() >= 3 && words[0] == "primary" && words[1] == "key" \
 			&& words[2][0] == '(' && words[2][words[2].length() - 1] == ')')
 		{
 			// 如果是主码。
@@ -577,7 +567,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 			{
 				throw SqlError("Multiple primary keys. This feature is not supported in miniSQL.");
 			}
-			for (int i = 0; i < fields.size(); i++)  // SQL 要求主码的字段必须在前面已经定义。
+			for (unsigned int i = 0; i < fields.size(); i++)  // SQL 要求主码的字段必须在前面已经定义。
 			{
 				if (fields[i].fieldName == words[2].substr(1, words[2].length() - 2))
 				{
@@ -590,7 +580,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 				throw SqlError("Field undefined for primary key definition.");
 			}
 		}
-		else if (words.size < 2)
+		else if (words.size() < 2)
 		{
 			// 如果没有表明类型。
 			throw SqlError("Undefined field type.");
@@ -598,7 +588,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 		else
 		{
 			string fieldName, fieldType; // 分析得到的字段信息。
-			int fieldSize = 0; // 分析得到的字段长度。
+			unsigned int fieldSize = 0; // 分析得到的字段长度。
 			bool unique = false; // 分析得到的字段是否唯一。
 			bool flag = false; // 判断字段名是否有效。SQL 中要求字段命名必须为字母、数字或下划线，无首字符不得为数字的要求。
 			for (char c: words[0])
@@ -619,7 +609,7 @@ void tableCreateProcess(const string info, vector<struct field>& fields, string 
 					throw SqlError("Invalid syntax.");
 				}
 				bool flag = false; // 判断数字参数内是否有非数字字符。
-				for (int i = 1; words[2][i] != ')' && i < words[2].length(); i++)
+				for (unsigned int i = 1; words[2][i] != ')' && i < words[2].length(); i++)
 				{
 					if (words[2][i] < '0' || words[2][1] > '9')
 					{
@@ -712,11 +702,11 @@ void recordInsertProcess(const string table, const string info, const vector<str
 	{
 		throw SqlError("Number of values to insert does not match number of fields of target table.");
 	}
-	for (int i = 0; i < values.size(); i++)
+	for (unsigned int i = 0; i < values.size(); i++)
 	{
 		if (fields[i].fieldType == "int")
 		{
-			for (int j = 0; j < values[i].length(); j++)
+			for (unsigned int j = 0; j < values[i].length(); j++)
 			{
 				if (values[i][j] <'0' || values[i][j] > '9') // 如果为非数字
 				{
@@ -737,7 +727,7 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				// 主码的 unique 测试。
 				if (findIndexNode(currentDatabase + "#" + table, value) != -1)
 				{
-					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 				}
 			}
 			else if (fields[i].unique)
@@ -748,14 +738,14 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				{
 					if (findIndexNode(currentDatabase + "-" + indexName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 					}
 				}
 				else
 				{
 					if (getUniqueOffset(currentDatabase + "-" + table, fields[i].fieldName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 					}
 				}
 			}
@@ -764,10 +754,10 @@ void recordInsertProcess(const string table, const string info, const vector<str
 		}
 		else if (fields[i].fieldType == "float")
 		{
-			for (int j = 0; j < values[i].length(); j++)
+			for (unsigned int j = 0; j < values[i].length(); j++)
 			{
 				int flag;	// 是否已经出现过一次小数点。
-				if (values[i][j] <'0' || values[i][j] > '9' || (values[i][j] == '.' && (flag || j == 0 || j == values[i].length-1))) // 如果为非数字或小数点位置不对
+				if (values[i][j] <'0' || values[i][j] > '9' || (values[i][j] == '.' && (flag || j == 0 || j == values[i].length()-1))) // 如果为非数字或小数点位置不对
 				{
 					throw SqlError("Value " + values[i] + " for field \"" + fields[i].fieldName + "\" does not match the type \"float\".");
 				}
@@ -790,7 +780,7 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				// 主码的 unique 测试。
 				if (findIndexNode(currentDatabase + "#" + table, value) != -1)
 				{
-					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 				}
 			}
 			else if (fields[i].unique)
@@ -801,14 +791,14 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				{
 					if (findIndexNode(currentDatabase + "-" + indexName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 					}
 				}
 				else
 				{
 					if (getUniqueOffset(currentDatabase + "-" + table, fields[i].fieldName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 					}
 				}
 			}
@@ -817,7 +807,7 @@ void recordInsertProcess(const string table, const string info, const vector<str
 		}
 		else if (fields[i].fieldType == "char")
 		{
-			if (values[i][0] != '\'' || values[i][values[i].length - 1] != '\'')
+			if (values[i][0] != '\'' || values[i][values[i].length() - 1] != '\'')
 			{
 				throw SqlError("Value " + values[i] + " for field \"" + fields[i].fieldName + "\" does not match the type \"char\".");
 			}
@@ -825,13 +815,13 @@ void recordInsertProcess(const string table, const string info, const vector<str
 			{
 				throw SqlError("Value " + values[i] + " for field \"" + fields[i].fieldName + "\" is too long.");
 			}
-			FixedString value = FixedString(fields[i].fieldSize ,values[i].substr(1, values[i].length - 2));
+			FixedString value = FixedString(fields[i].fieldSize ,values[i].substr(1, values[i].length() - 2));
 			if (isPrimaryKey(currentDatabase, table, fields[i].fieldName))
 			{
 				// 主码的 unique 测试。
 				if (findIndexNode(currentDatabase + "#" + table, value) != -1)
 				{
-					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+					throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 				}
 			}
 			else if (fields[i].unique)
@@ -842,14 +832,14 @@ void recordInsertProcess(const string table, const string info, const vector<str
 				{
 					if (findIndexNode(currentDatabase + "-" + indexName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 					}
 				}
 				else
 				{
 					if (getUniqueOffset(currentDatabase + "-" + table, fields[i].fieldName, value) != -1)
 					{
-						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\.");
+						throw SqlError("Duplicate value " + values[i] + " for unique field \"" + fields[i].fieldName + "\".");
 					}
 				}
 			}
@@ -871,7 +861,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 	vector<string> lines;  // 各个要插入的值。
 	do {
 		string line; // 要处理的语句分段。
-		rpos = info.find('and', lpos);	// miniSQL 关键字要求全小写。还好条件只有 and...
+		rpos = info.find("and", lpos);	// miniSQL 关键字要求全小写。还好条件只有 and...
 		if (rpos != string::npos)
 		{
 			line = info.substr(lpos, rpos - lpos);
@@ -892,37 +882,37 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		string valueStr;	// 要操作的值的字符串形式。
 		try
 		{
-			if ((oppos = line.find('<=')) != string::npos)
+			if ((oppos = line.find("<=")) != string::npos)
 			{
 				op = LTE;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 2, line.length() - oppos - 2).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
-			else if ((oppos = line.find('>=')) != string::npos)
+			else if ((oppos = line.find(">=")) != string::npos)
 			{
 				op = GTE;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 2, line.length() - oppos - 2).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
-			else if ((oppos = line.find('<>')) != string::npos)
+			else if ((oppos = line.find("<>")) != string::npos)
 			{
 				op = DIFF;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 2, line.length() - oppos - 2).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
-			else if ((oppos = line.find('<')) != string::npos)
+			else if ((oppos = line.find("<")) != string::npos)
 			{
 				op = LT;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 1, line.length() - oppos - 1).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
-			else if ((oppos = line.find('>')) != string::npos)
+			else if ((oppos = line.find(">")) != string::npos)
 			{
 				op = GT;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 				valueStr = line.substr(oppos + 1, line.length() - oppos - 1).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
 			}
-			else if ((oppos = line.find('=')) != string::npos)
+			else if ((oppos = line.find("=")) != string::npos)
 			{
 				op = EQ;
 				attr = line.substr(0, oppos).substr(line.find_first_not_of(' '), line.find_last_not_of(' ') + 1);
@@ -938,7 +928,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 			throw SqlError("Invalid syntax for where clause.");
 		}
 		int fieldId = -1;	// attr 所指向的字段的 index.
-		for (int j = 0; j < fields.size(); j++)
+		for (unsigned int j = 0; j < fields.size(); j++)
 		{
 			if (fields[j].fieldName == attr)
 			{
@@ -953,7 +943,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		// 开始判断类型是否正确。
 		if (fields[fieldId].fieldType == "int")
 		{
-			for (int j = 0; j < valueStr.length(); j++)
+			for (unsigned int j = 0; j < valueStr.length(); j++)
 			{
 				if (valueStr[j] <'0' || valueStr[j] > '9') // 如果为非数字
 				{
@@ -974,10 +964,10 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		}
 		else if (fields[fieldId].fieldType == "float")
 		{
-			for (int j = 0; j < valueStr.length(); j++)
+			for (unsigned int j = 0; j < valueStr.length(); j++)
 			{
 				int flag;	// 是否已经出现过一次小数点。
-				if (valueStr[j] <'0' || valueStr[j] > '9' || (valueStr[j] == '.' && (flag || j == 0 || j == valueStr.length - 1))) // 如果为非数字或小数点位置不对
+				if (valueStr[j] <'0' || valueStr[j] > '9' || (valueStr[j] == '.' && (flag || j == 0 || j == valueStr.length() - 1))) // 如果为非数字或小数点位置不对
 				{
 					throw SqlError("Value " + valueStr + " for field \"" + attr + "\" does not match the type \"float\".");
 				}
@@ -1000,7 +990,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		}
 		else if (fields[fieldId].fieldType == "char")
 		{
-			if (valueStr[0] != '\'' || valueStr[valueStr.length - 1] != '\'')
+			if (valueStr[0] != '\'' || valueStr[valueStr.length() - 1] != '\'')
 			{
 				throw SqlError("Value " + valueStr + " for field \"" + attr + "\" does not match the type \"char\".");
 			}
@@ -1012,7 +1002,7 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 			{
 				throw SqlError("Invalid operation for field \"" + attr + "\" of type \"char\".");
 			}
-			FixedString value = FixedString(fields[fieldId].fieldSize, valueStr.substr(1, valueStr.length - 2));
+			FixedString value = FixedString(fields[fieldId].fieldSize, valueStr.substr(1, valueStr.length() - 2));
 			Condition cond = Condition(attr, op, value);
 			conditions.push_back(cond);
 		}
@@ -1273,7 +1263,7 @@ void fieldsProcess(const string table, const string info, vector<string> &fieldL
 	if ((info.substr(info.find_first_not_of(' '), info.find_last_not_of(' ') + 1)) == "*")
 	{
 		const vector<field> fields = getFields(currentDatabase, table);
-		for (int i = 0; i < fields.size(); i++)
+		for (unsigned int i = 0; i < fields.size(); i++)
 		{
 			fieldList.push_back(fields[i].fieldName);
 		}
@@ -1298,7 +1288,7 @@ void fieldsProcess(const string table, const string info, vector<string> &fieldL
 			fields.push_back(line);
 		} while (rpos != string::npos);
 		// 判断字段是否存在。
-		for (int i = 0; i < fields.size(); i++)
+		for (unsigned int i = 0; i < fields.size(); i++)
 		{
 			if (getField(currentDatabase, table, fields[i]).fieldName == "")
 			{
@@ -1402,7 +1392,7 @@ struct recordRange recordProcess(const string table, vector<Condition> &conditio
 			{
 				if ((*it).type == 'd')
 				{
-					range2 = findIndexNodes(index, (*it).value1.d, (*it).eq1, (*it).value2.d, (*it).eq2);
+					range2 = findIndexNodes(index, static_cast<const float>((*it).value1.d), (*it).eq1, static_cast<const float>((*it).value2.d), (*it).eq2);
 					range2used = true;
 				}
 				else if ((*it).type == 'f')

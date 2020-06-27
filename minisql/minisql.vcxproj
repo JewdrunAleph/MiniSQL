@@ -152,17 +152,29 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="api.cpp" />
+    <ClCompile Include="Attribute.cpp" />
     <ClCompile Include="buffer_manager.cpp" />
+    <ClCompile Include="catalog_manager.cpp" />
+    <ClCompile Include="Condition.cpp" />
+    <ClCompile Include="IndexManager.cpp" />
+    <ClCompile Include="Interpreter.cpp" />
     <ClCompile Include="minisql.cpp" />
+    <ClCompile Include="RecordManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api.h" />
+    <ClInclude Include="Attribute.h" />
+    <ClInclude Include="BPlusTree.h" />
     <ClInclude Include="buffer_manager.h" />
     <ClInclude Include="catalog.h" />
+    <ClInclude Include="Condition.h" />
     <ClInclude Include="index.h" />
+    <ClInclude Include="IndexInfo.h" />
+    <ClInclude Include="IndexManager.h" />
     <ClInclude Include="interpreter.h" />
     <ClInclude Include="minisql.h" />
     <ClInclude Include="record.h" />
+    <ClInclude Include="RecordManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,6 +7,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "minisql.h"
+#include "record.h"
 using namespace std;
 
 // api 模块在创建数据表时传入的字段的格式。
@@ -17,7 +19,7 @@ using namespace std;
 struct field {
 	string fieldName;
 	string fieldType;
-	int fieldSize;
+	unsigned int fieldSize;
 	bool unique;
 };
 
@@ -108,6 +110,10 @@ public:
 		{
 			return static_cast<float>(this->value1.d);
 		}
+		else
+		{
+			throw CodeError("condition getvalue1: invalid condition type!");
+		}
 	}
 
 	const float getValue2() const
@@ -119,6 +125,10 @@ public:
 		else if (type == 'd')
 		{
 			return static_cast<float>(this->value2.d);
+		}
+		else
+		{
+			throw CodeError("condition getvalue1: invalid condition type!");
 		}
 	}
 
@@ -159,4 +169,15 @@ void executeCommand(const struct command);
 // inCondInterval 函数：判断一个数值是否在条件的区间内。
 bool inCondInterval(float value, const Condition cond);
 
+
+// 模块内部使用的函数，其他模块请不要使用。
+
+void tableCreateProcess(const string, vector<struct field>&, string &);
+void recordInsertProcess(const string, const string, const vector<struct field>, vector<Record_node> &);
+void conditionProcess(const string, const vector<struct field>, vector<Condition> &);
+void fieldsProcess(const string, const string, vector<string> &);
+struct recordRange recordProcess(const string, vector<Condition> &);
+vector<int> mergeOffsets(vector<int>, vector<int>);
+vector<int> unionOffsets(vector<int>, vector<int>);
+vector<int> excludeOffsets(vector<int>, vector<int>);
 #endif

@@ -1,4 +1,4 @@
-#ifndef _MINISQL_H
+﻿#ifndef _MINISQL_H
 #define _MINISQL_H
 
 // 定义一些整个项目都需要用到的内容。
@@ -21,23 +21,38 @@ public:
 	}
 };
 
+// 因为代码调用问题导致的错误。
+class CodeError : exception
+{
+	string message;
+public:
+	CodeError(string message)
+	{
+		this->message = message;
+	}
+	void printError()
+	{
+		cout << "error: " << message << endl;
+	}
+};
+
 // 定长的字符串，末尾无需补0.
 // 目前只编写了一部分功能，其余的（如比较等功能）请需要用的同学来补全。
 class FixedString
 {
 	char *content;
-	int size;
+	int stringSize;
 public:
 	FixedString()
 	{
-		size = 0;
+		stringSize = 0;
 		content = NULL;
 	}
 
 	FixedString(int size, char *str)
 	{
 		// 不保证 str 的长度符合要求，需要自行判断。若长度超出则会进行截取。
-		this->size = size;
+		this->stringSize = size;
 		content = new char[size];
 		bool flag = false;
 		for (int i = 0; i < size; i++)
@@ -60,12 +75,12 @@ public:
 		}
 	}
 
-	FixedString(int size, string str)
+	FixedString(unsigned int size, string str)
 	{
 		// 不保证 str 的长度符合要求，需要自行判断。若长度超出则会进行截取。
-		this->size = size;
+		this->stringSize = size;
 		content = new char[size];
-		for (int i = 0; i < size; i++)
+		for (unsigned int i = 0; i < size; i++)
 		{
 			if (i < str.length())
 			{
@@ -80,9 +95,9 @@ public:
 
 	FixedString(const FixedString &str)
 	{
-		this->size = str.size;
-		this->content = new char[size];
-		for (int i = 0; i < size; i++)
+		this->stringSize = str.size();
+		this->content = new char[stringSize];
+		for (int i = 0; i < stringSize; i++)
 		{
 			this->content[i] = str.content[i];
 		}
@@ -93,22 +108,22 @@ public:
 		delete content;
 	}
 
-	int size()
+	int size() const
 	{
-		return size;
+		return stringSize;
 	}
 
-	char operator [] (int i)
+	char operator [] (int i) const
 	{
 		return content[i];
 	}
 
-	operator char* ()
+	operator char* () const
 	{
 		return content;
 	}
 
-	operator string ()
+	operator string () const
 	{
 		return static_cast<string>(content);
 	}
