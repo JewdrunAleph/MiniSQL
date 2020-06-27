@@ -1,9 +1,4 @@
-//#include "catalog_manager.h"
-//#include "api.h"
-
-#include <vector>
-#include <set>
-#include <string>
+#include "catalog.h"
 
 using namespace std;
 
@@ -210,30 +205,30 @@ const string getPrimaryKey(const string D_str, const string T_str)
 	}
 }
 
-const bool indexExists(const string D_str, const string I_str)
-{
-
-}
-
-const string indexInField(const string D_str, const string T_str, const string I_str)
-{
-	
-}
-
-const vector<string> indiceInTable(const string D_str, const string T_str)
-{
-	
-}
-
-void createIndex(const string D_str, const string I_str)
-{
-	
-}
-
-void dropIndex(const string D_str, const string I_str)
-{
-	
-}
+//const bool indexExists(const string D_str, const string I_str)
+//{
+//
+//}
+//
+//const string indexInField(const string D_str, const string T_str, const string I_str)
+//{
+//	
+//}
+//
+//const vector<string> indiceInTable(const string D_str, const string T_str)
+//{
+//	
+//}
+//
+//void createIndex(const string D_str, const string I_str)
+//{
+//	
+//}
+//
+//void dropIndex(const string D_str, const string I_str)
+//{
+//	
+//}
 
 const vector<string> tablesInDatabase(const string D_str)
 {

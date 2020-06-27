@@ -1,8 +1,5 @@
 #include "IndexManager.h"
-#include <iostream>
-#include "API.h"
-#include "IndexInfo.h"
-#include <vector>
+
 using namespace std;
 
 

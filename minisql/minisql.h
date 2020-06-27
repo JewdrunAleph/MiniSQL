@@ -2,8 +2,10 @@
 #define _MINISQL_H
 
 // 定义一些整个项目都需要用到的内容。
-
-# include <string>
+#include <fstream>
+#include <string>
+#include"Interpreter.h"
+#include"api.h"
 using namespace std;
 
 // sql 语句执行过程中的错误。

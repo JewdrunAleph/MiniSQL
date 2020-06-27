@@ -1,9 +1,4 @@
 #include "api.h"
-#include "catalog.h"
-#include "interpreter.h"
-#include "index.h"
-#include "record.h"
-#include "minisql.h"
 
 using namespace std;
 

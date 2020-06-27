@@ -1,8 +1,5 @@
-#include <iostream>
-#include "RecordManager.h"
-#include <cstring>
-#include "API.h"
 
+#include "RecordManager.h"
 /**
  *
  * create a table
