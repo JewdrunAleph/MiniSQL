@@ -56,4 +56,5 @@ public:
 
 
 
+
 #endif /* defined(__Minisql__IndexManager__) */
