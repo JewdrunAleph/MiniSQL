@@ -1020,12 +1020,12 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 		}
 		Condition cond1 = conditions[conditions.size() - 1];	// 最近插入的条件。
 		Condition cond2;										// 要比较的条件。
-		vector<Condition>::iterator it;							// 条件迭代器。
 		// 判断是否可以合并条件。
 		bool flag = false;	// 为 true 则表明可以进行条件合并
-		for (it = conditions.begin(); (it+1) != conditions.end(); it++)	// 之所以不用迭代器是因为判断是否为最后一项比这麻烦。
+		int i;
+		for (i = 0; i < conditions.size(); i++)	// 之所以不用迭代器是因为判断是否为最后一项比这麻烦。
 		{
-			cond2 = *it;						
+			cond2 = conditions[i];						
 			if (cond2.attr == cond1.attr)
 			{
 				flag = true;
@@ -1060,7 +1060,8 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 					{
 						if (cond1.op == EQ)
 						{
-							conditions.erase(it);	// 删除 cond2。
+							conditions.erase(conditions.begin() + i);	// 删除 cond2。
+							i--;
 						}
 						else
 						{
@@ -1077,7 +1078,8 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 					// 第一个条件为等于，那么只有两种情况：第一个条件值在/不在第二个条件的区间内。
 					if (inCondInterval(cond1.getValue1(), cond2))
 					{
-						conditions.erase(it);		// 值在区间内，舍弃 cond2。
+						conditions.erase(conditions.begin() + i);		// 值在区间内，舍弃 cond2。
+						i--;
 					}
 					else
 					{
@@ -1104,7 +1106,8 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 				else if (cond2.op == DIFF && !inCondInterval(cond2.getValue1(), cond1))
 				{
 					// 第一个条件为不等于且值不在第二个条件的区间内，即条件无效，舍弃 cond2。
-					conditions.erase(it);
+					conditions.erase(conditions.begin() + i);
+					i--;
 				}
 				else if (cond2.op == BETW)
 				{
@@ -1171,7 +1174,8 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 						if ((cond1.op == LTE || cond1.op == LT) && (cond2.op == LTE || cond2.op == LT))
 						{
 							// 舍去 cond2 的情形。
-							conditions.erase(it);
+							conditions.erase(conditions.begin() + i);
+							i--;
 						}
 						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == GTE || cond2.op == GT))
 						{
@@ -1181,7 +1185,8 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == LTE || cond2.op == LT))
 						{
 							// 取区间的情形。
-							conditions.erase(it);
+							conditions.erase(conditions.begin() + i);
+							i--;
 							conditions.pop_back();
 							if (cond1.type == 'd')
 							{
@@ -1206,7 +1211,8 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 						if ((cond1.op == LTE || cond1.op == GTE) && (cond2.op == LTE || cond2.op == GTE))
 						{
 							// 条件可以合并成相等。
-							conditions.erase(it);
+							conditions.erase(conditions.begin() + i);
+							i--;
 							conditions.pop_back();
 							if (cond1.type == 'd')
 							{
@@ -1234,12 +1240,14 @@ void conditionProcess(const string info, const vector<struct field> fields, vect
 						else if ((cond1.op == GTE || cond1.op == GT) && (cond2.op == GTE || cond2.op == GT))
 						{
 							// 舍去 cond2 的情形。
-							conditions.erase(it);
+							conditions.erase(conditions.begin() + i);
+							i--;
 						}
 						else if ((cond1.op == LTE || cond1.op == LT) && (cond2.op == GTE || cond2.op == GT))
 						{
 							// 取区间的情形。
-							conditions.erase(it);
+							conditions.erase(conditions.begin() + i);
+							i--;
 							conditions.pop_back();
 							if (cond1.type == 'd')
 							{
@@ -1508,20 +1516,20 @@ vector<int> unionOffsets(vector<int> v1, vector<int> v2)
 // excludeOffsets 函数：在 v1 中排除 v2 元素。
 vector<int> excludeOffsets(vector<int> v1, vector<int> v2)
 {
-	vector<int>::iterator i1 = v1.begin(), i2 = v2.begin();
-	while (i1 != v1.end() && i2 != v2.end())
+	int i1 = 0, i2 = 0;
+	while (i1 < v1.size() && i2 < v2.size())
 	{
-		if ((*i1) > (*i2))
+		if (v1[i1] > v2[i2])
 		{
 			i2++;
 		}
-		if ((*i1) < (*i2))
+		else if (v1[i1] < v2[i2])
 		{
 			i1++;
 		}
-		if ((*i1) == (*i2))
+		else if (v1[i1] == v2[i2])
 		{
-			v1.erase(i1);
+			v1.erase(v1.begin() + i1);
 			i2++;
 		}
 	}
