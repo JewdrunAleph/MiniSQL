@@ -1,12 +1,12 @@
 #ifndef _MINISQL_H
 #define _MINISQL_H
 
-// ¶¨ÒåÒ»Ğ©Õû¸öÏîÄ¿¶¼ĞèÒªÓÃµ½µÄÄÚÈİ¡£
+// å®šä¹‰ä¸€äº›æ•´ä¸ªé¡¹ç›®éƒ½éœ€è¦ç”¨åˆ°çš„å†…å®¹ã€‚
 
 # include <string>
 using namespace std;
 
-// sql Óï¾äÖ´ĞĞ¹ı³ÌÖĞµÄ´íÎó¡£
+// sql è¯­å¥æ‰§è¡Œè¿‡ç¨‹ä¸­çš„é”™è¯¯ã€‚
 class SqlError : exception
 {
 	string message;
@@ -21,8 +21,8 @@ public:
 	}
 };
 
-// ¶¨³¤µÄ×Ö·û´®£¬Ä©Î²ÎŞĞè²¹0.
-// Ä¿Ç°Ö»±àĞ´ÁËÒ»²¿·Ö¹¦ÄÜ£¬ÆäÓàµÄ£¨Èç±È½ÏµÈ¹¦ÄÜ£©ÇëĞèÒªÓÃµÄÍ¬Ñ§À´²¹È«¡£
+// å®šé•¿çš„å­—ç¬¦ä¸²ï¼Œæœ«å°¾æ— éœ€è¡¥0.
+// ç›®å‰åªç¼–å†™äº†ä¸€éƒ¨åˆ†åŠŸèƒ½ï¼Œå…¶ä½™çš„ï¼ˆå¦‚æ¯”è¾ƒç­‰åŠŸèƒ½ï¼‰è¯·éœ€è¦ç”¨çš„åŒå­¦æ¥è¡¥å…¨ã€‚
 class FixedString
 {
 	char *content;
@@ -36,7 +36,7 @@ public:
 
 	FixedString(int size, char *str)
 	{
-		// ²»±£Ö¤ str µÄ³¤¶È·ûºÏÒªÇó£¬ĞèÒª×ÔĞĞÅĞ¶Ï¡£Èô³¤¶È³¬³öÔò»á½øĞĞ½ØÈ¡¡£
+		// ä¸ä¿è¯ str çš„é•¿åº¦ç¬¦åˆè¦æ±‚ï¼Œéœ€è¦è‡ªè¡Œåˆ¤æ–­ã€‚è‹¥é•¿åº¦è¶…å‡ºåˆ™ä¼šè¿›è¡Œæˆªå–ã€‚
 		this->size = size;
 		content = new char[size];
 		bool flag = false;
@@ -55,14 +55,14 @@ public:
 			}
 			if (flag)
 			{
-				content[i] = '\0';	// ¶àÓàµÄ²¿·ÖÓÃ0²¹È«¡£
+				content[i] = '\0';	// å¤šä½™çš„éƒ¨åˆ†ç”¨0è¡¥å…¨ã€‚
 			}
 		}
 	}
 
 	FixedString(int size, string str)
 	{
-		// ²»±£Ö¤ str µÄ³¤¶È·ûºÏÒªÇó£¬ĞèÒª×ÔĞĞÅĞ¶Ï¡£Èô³¤¶È³¬³öÔò»á½øĞĞ½ØÈ¡¡£
+		// ä¸ä¿è¯ str çš„é•¿åº¦ç¬¦åˆè¦æ±‚ï¼Œéœ€è¦è‡ªè¡Œåˆ¤æ–­ã€‚è‹¥é•¿åº¦è¶…å‡ºåˆ™ä¼šè¿›è¡Œæˆªå–ã€‚
 		this->size = size;
 		content = new char[size];
 		for (int i = 0; i < size; i++)
@@ -113,7 +113,35 @@ public:
 		return static_cast<string>(content);
 	}
 
-	// TODO: Ôö¼ÓÓë char* / string / FixedString ½øĞĞ±È½ÏµÄÔËËã·ûÖØÔØ£¡£¡£¡
+	// TODO: å¢åŠ ä¸ char* / string / FixedString è¿›è¡Œæ¯”è¾ƒçš„è¿ç®—ç¬¦é‡è½½ï¼ï¼ï¼
+};
+
+
+struct blockNode
+{
+    int offsetNum; // the offset number in the block list
+    bool pin;  // the flag that this block is locked
+    bool ifbottom; // flag that this is the end of the file node
+    char* fileName; // the file which the block node belongs to
+    friend class BufferManager;
+    
+private:
+    char *address; // the content address
+    blockNode * preBlock;
+    blockNode * nextBlock;
+    bool reference; // the LRU replacement flag
+    bool dirty; // the flag that this block is dirty, which needs to written back to the disk later
+    size_t using_size; // the byte size that the block have used. The total size of the block is BLOCK_SIZE . This value is stored in the block head.
+    
+};
+
+struct fileNode
+{
+    char *fileName;
+    bool pin; // the flag that this file is locked
+    blockNode *blockHead;
+    fileNode * nextFile;
+    fileNode * preFile;
 };
 
 #endif
