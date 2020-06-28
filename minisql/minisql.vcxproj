@@ -170,7 +170,7 @@
     <ClInclude Include="Condition.h" />
     <ClInclude Include="IndexInfo.h" />
     <ClInclude Include="IndexManager.h" />
-    <ClInclude Include="interpreter.h" />
+    <ClInclude Include="Interpreter.h" />
     <ClInclude Include="minisql.h" />
     <ClInclude Include="RecordManager.h" />
   </ItemGroup>
