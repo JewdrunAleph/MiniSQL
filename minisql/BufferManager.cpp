@@ -1,9 +1,5 @@
 #include "BufferManager.h"
-#include "minisql.h"
-#include <stdlib.h>
-#include <string>
-#include <cstring>
-#include <queue>
+
 
 /**
  *  Constructor Function: allocate memories for the pools

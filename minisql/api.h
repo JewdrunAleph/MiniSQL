@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 #include "minisql.h"
-#include "catalog.h"
+#include "CatalogManager.h"
 #include "interpreter.h"
-#include "index.h"
-#include "record.h"
+#include "IndexManager.h"
+#include "RecordManager.h"
 using namespace std;
 
 // api 模块在创建数据表时传入的字段的格式。

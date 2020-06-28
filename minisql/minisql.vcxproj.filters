@@ -21,13 +21,7 @@
     <ClCompile Include="api.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="buffer_manager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Attribute.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="catalog_manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Condition.cpp">
@@ -42,27 +36,21 @@
     <ClCompile Include="RecordManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="BufferManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CatalogManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="catalog.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="interpreter.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="record.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="index.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="minisql.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="buffer_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Attribute.h">
@@ -81,6 +69,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RecordManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CatalogManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

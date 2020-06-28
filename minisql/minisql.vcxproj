@@ -23,7 +23,7 @@
     <ProjectGuid>{07C7EEEB-0ABB-4F12-A914-44D8067CCE20}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>minisql</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -153,8 +153,8 @@
   <ItemGroup>
     <ClCompile Include="api.cpp" />
     <ClCompile Include="Attribute.cpp" />
-    <ClCompile Include="buffer_manager.cpp" />
-    <ClCompile Include="catalog_manager.cpp" />
+    <ClCompile Include="BufferManager.cpp" />
+    <ClCompile Include="CatalogManager.cpp" />
     <ClCompile Include="Condition.cpp" />
     <ClCompile Include="IndexManager.cpp" />
     <ClCompile Include="Interpreter.cpp" />
@@ -165,15 +165,13 @@
     <ClInclude Include="api.h" />
     <ClInclude Include="Attribute.h" />
     <ClInclude Include="BPlusTree.h" />
-    <ClInclude Include="buffer_manager.h" />
-    <ClInclude Include="catalog.h" />
+    <ClInclude Include="BufferManager.h" />
+    <ClInclude Include="CatalogManager.h" />
     <ClInclude Include="Condition.h" />
-    <ClInclude Include="index.h" />
     <ClInclude Include="IndexInfo.h" />
     <ClInclude Include="IndexManager.h" />
     <ClInclude Include="interpreter.h" />
     <ClInclude Include="minisql.h" />
-    <ClInclude Include="record.h" />
     <ClInclude Include="RecordManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

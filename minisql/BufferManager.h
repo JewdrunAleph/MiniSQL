@@ -1,8 +1,12 @@
 #ifndef BufferManager_h
 #define BufferManager_h
-#include "Minisql.h"
+//#include "Minisql.h"
 #include <stdio.h>
-
+#include "minisql.h"
+#include <stdlib.h>
+#include <string>
+#include <cstring>
+#include <queue>
 static int replaced_block = -1;
 
 

@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdio.h>
 #include <string.h>
-#include "buffer_manager.h"
+#include "BufferManager.h"
 #include "minisql.h"
 #include <string>
 using namespace std;
