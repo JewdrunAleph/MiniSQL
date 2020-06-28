@@ -9,7 +9,7 @@
 #include <vector>
 #include "minisql.h"
 #include "CatalogManager.h"
-#include "interpreter.h"
+#include "Interpreter.h"
 #include "IndexManager.h"
 #include "RecordManager.h"
 using namespace std;
